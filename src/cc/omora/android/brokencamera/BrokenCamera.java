@@ -129,13 +129,13 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		} else if(keyCode == KeyEvent.KEYCODE_VOLUME_DOWN && mLevel > 0) {
 			mLevel--;
 		}
-		mLevelControl.setProgress(mLevel);
 		if(mLevelControlRunnable != null) {
 			mLevelControlHandler.removeCallbacks(mLevelControlRunnable);
 		}
 		if(!mLevelControl.isShowing()) {
 			mLevelControl.show();
 		}
+		mLevelControl.setProgress(mLevel);
 		mLastLevelControlTimeMillis = System.currentTimeMillis();
 		mLevelControlHandler = new Handler();
 		mLevelControlRunnable = new Runnable() {
