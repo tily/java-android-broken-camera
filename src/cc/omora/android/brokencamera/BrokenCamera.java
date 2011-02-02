@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -56,6 +57,10 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+			Display display = getWindowManager().getDefaultDisplay();
+			mWidth = display.getWidth();
+			mHeight = display.getHeight(); 
 		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -188,14 +193,42 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			}
 		}
 		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-			mWidth = width;
-			mHeight = height;
+			Camera.Parameters params=mCameraDevice.getParameters();
+			List<Size> previewSizes = Reflect.getSupportedSizes(params, true);
+			List<Size> pictureSizes = Reflect.getSupportedSizes(params, false);
+			if(null != previewSizes) {
+				Size optimalSize = getOptimalSize(previewSizes, width, height);
+				params.setPreviewSize(optimalSize.width, optimalSize.height);
+			} else {
+				params.setPreviewSize(width, height);
+			}
+			if(null != pictureSizes) {
+				Size optimalSize = getOptimalSize(pictureSizes, width, height);
+				params.setPictureSize(optimalSize.width, optimalSize.height);
+			} else {
+				params.setPictureSize(width, height);
+			}
+			mCameraDevice.setParameters(params);
 			if(mCameraDevice != null) {
 				mCameraDevice.stopPreview();
 				mCameraDevice.startPreview();
 			}
 		}
 		public void surfaceDestroyed(SurfaceHolder holder) {
+		}
+		private Size getOptimalSize(List<Size> sizes, int w, int h) {
+			final double ASPECT_TOLERANCE = 0.05;
+			double targetRatio = (double) w / h;
+			if (sizes == null) return null;
+			Size optimalSize = null;
+			for (Size size : sizes) {
+				double ratio = (double) size.width / size.height;
+				if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
+					optimalSize = size;
+					break;
+				}
+			}
+			return optimalSize;
 		}
 	}
 
