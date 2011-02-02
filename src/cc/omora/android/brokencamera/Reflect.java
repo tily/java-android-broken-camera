@@ -1,4 +1,4 @@
-//http://labs.techfirm.co.jp/android/cho/1647
+// based on http://labs.techfirm.co.jp/android/cho/1647
 package cc.omora.android.brokencamera;
 
 import android.hardware.Camera;
