@@ -131,7 +131,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 	public void showGlitchLevelControl(int keyCode) {
 		if(keyCode == KeyEvent.KEYCODE_VOLUME_UP && mLevel < 100) {
 			mLevel++;
-		} else if(keyCode == KeyEvent.KEYCODE_VOLUME_DOWN && mLevel > 0) {
+		} else if(keyCode == KeyEvent.KEYCODE_VOLUME_DOWN && mLevel > 1) {
 			mLevel--;
 		}
 		if(mLevelControlRunnable != null) {
@@ -299,7 +299,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 	PictureCallback mJpgPictureCallback = new PictureCallback() {
 		public void onPictureTaken(byte [] data, final Camera camera) {
 			for(int i = 0; i < data.length; i++) {
-				if(data[i] == 48 && new Random().nextInt((100 - mLevel)*5) == 0) {
+				if(data[i] == 48 && new Random().nextInt((101 - mLevel)*5) == 0) {
 					data[i] = (byte) (new Random().nextInt(10) + 47);
 				}
 			}
