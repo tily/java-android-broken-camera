@@ -63,9 +63,9 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-			Display display = getWindowManager().getDefaultDisplay();
-			mWidth = display.getWidth();
-			mHeight = display.getHeight(); 
+		Display display = getWindowManager().getDefaultDisplay();
+		mWidth = display.getWidth();
+		mHeight = display.getHeight(); 
 		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -95,7 +95,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		mOrientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_UI) {
 			public void onOrientationChanged(int orientation) {
 				if(!mIsTakingPicture && mCameraDevice != null) {
-			        	orientation = (orientation + 45) / 90 * 90;
+					orientation = (orientation + 45) / 90 * 90;
 					orientation = orientation % 360;
 					orientation = orientation == 270 ? 0 : orientation + 90;
 					Camera.Parameters params = mCameraDevice.getParameters();
@@ -103,7 +103,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 					mCameraDevice.setParameters(params);
 					mOrientation = orientation;
 				}
-	                }
+			}
 		};
 		mOrientationEventListener.enable();
 	}
