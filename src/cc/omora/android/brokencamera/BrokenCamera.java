@@ -319,11 +319,11 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 
 	AutoFocusCallback mAutoFocusCallback = new AutoFocusCallback() {
 		public void onAutoFocus(boolean success, final Camera camera) {
-			camera.takePicture(mShutterCallback, mRawPictureCallback, mJpgPictureCallback);
+			camera.takePicture(mShutterCallback, null, mJpegPictureCallback);
 		}
 	};
 
-	PictureCallback mJpgPictureCallback = new PictureCallback() {
+	PictureCallback mJpegPictureCallback = new PictureCallback() {
 		public void onPictureTaken(byte [] data, final Camera camera) {
 			for(int i = 0; i < data.length; i++) {
 				if(data[i] == 48 && new Random().nextInt((101 - mLevel)*5) == 0) {
@@ -360,11 +360,6 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 					});
 				}
 			}).start();
-		}
-	};
-
-	PictureCallback mRawPictureCallback = new PictureCallback() {
-		public void onPictureTaken(byte [] data, Camera camera) {
 		}
 	};
 
