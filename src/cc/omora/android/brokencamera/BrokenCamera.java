@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
@@ -22,12 +23,14 @@ import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.view.Display;
 import android.view.KeyEvent;
+import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -48,12 +51,14 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 	Camera mCameraDevice;
 	Handler mLevelControlHandler;
 	Runnable mLevelControlRunnable;
+	OrientationEventListener mOrientationEventListener;
 	
 	int mWidth;
 	int mHeight;
 	int mLevel;
 	boolean mIsTakingPicture;
 	long mLastLevelControlTimeMillis;
+	int mOrientation;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -71,7 +76,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		if(mPreview == null) {
 			mPreview = new Preview(this);
 			setContentView(mPreview);
-			mPreview.setOnClickListener(listener);
+			mPreview.setOnClickListener(mOnClickListener);
 		}
 		if(mPostView == null) {
 			mPostView = new PostView(this);
@@ -87,6 +92,20 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			mProcessingDialog = new ProcessingDialog(this);
 			mProcessingDialog.setTitle("Processing ...");
 		}
+		mOrientationEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_UI) {
+			public void onOrientationChanged(int orientation) {
+				if(!mIsTakingPicture && mCameraDevice != null) {
+			        	orientation = (orientation + 45) / 90 * 90;
+					orientation = orientation % 360;
+					orientation = orientation == 270 ? 0 : orientation + 90;
+					Camera.Parameters params = mCameraDevice.getParameters();
+					params.setRotation(orientation);
+					mCameraDevice.setParameters(params);
+					mOrientation = orientation;
+				}
+	                }
+		};
+		mOrientationEventListener.enable();
 	}
 
 	protected void onStop() {
@@ -96,6 +115,11 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			mCameraDevice.release();
 			mCameraDevice = null;
 		}
+	}
+	
+	public void onDestroy() {
+		super.onDestroy();
+		mOrientationEventListener.disable();
 	}
 
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
@@ -243,8 +267,11 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		}
 		public void drawBitmapToCanvas(Bitmap bitmap) {
 			Canvas canvas = getHolder().lockCanvas();
+			Matrix matrix = new Matrix();
+			matrix.postRotate(360 - mOrientation);
+			Bitmap drawn = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
 			Rect rect = new Rect(0, 0, mWidth, mHeight);
-			canvas.drawBitmap(bitmap, null, rect, null);
+			canvas.drawBitmap(drawn, null, rect, null);
 			getHolder().unlockCanvasAndPost(canvas);
 		}
 	}
@@ -279,7 +306,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		}
 	}
 
-	OnClickListener listener = new OnClickListener() {
+	OnClickListener mOnClickListener = new OnClickListener() {
 		public void onClick(View v) {
 			try {
 				mCameraDevice.autoFocus(mAutoFocusCallback);
