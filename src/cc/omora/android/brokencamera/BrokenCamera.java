@@ -3,11 +3,18 @@ package cc.omora.android.brokencamera;
 import java.io.IOException;
 import java.lang.Runnable;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.SharedPreferences;
@@ -47,6 +54,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 	PostView mPostView;
 	LevelControl mLevelControl;
 	ProcessingDialog mProcessingDialog;
+	AlertDialog.Builder mBreakerSelectionDialog;
 	
 	Camera mCameraDevice;
 	Handler mLevelControlHandler;
@@ -59,6 +67,8 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 	boolean mIsTakingPicture;
 	long mLastLevelControlTimeMillis;
 	int mOrientation;
+
+	JSONArray mBreakerSettings;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -106,6 +116,25 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			}
 		};
 		mOrientationEventListener.enable();
+
+		String savedSettingStr = PreferenceManager.getDefaultSharedPreferences(this).getString("Breakers", "[]");
+		mBreakerSettings = Breaker.getSettings(this, savedSettingStr);
+		String[] items = Breaker.getItems(mBreakerSettings);
+		boolean[] enabledItems = Breaker.getEnabledItems(mBreakerSettings);
+		mBreakerSelectionDialog = new AlertDialog.Builder(this);
+		mBreakerSelectionDialog.setTitle("Select Breakers");
+		mBreakerSelectionDialog.setMultiChoiceItems(items, enabledItems, new DialogInterface.OnMultiChoiceClickListener() {
+			public void onClick(DialogInterface dialog, int item, boolean isChecked) {
+				try {
+					mBreakerSettings.getJSONObject(item).put("enabled", isChecked);
+				} catch(JSONException e) {
+				}
+			}
+		});
+	}
+
+	public void showSelectModeDialog() {
+		mBreakerSelectionDialog.show();
 	}
 
 	protected void onStop() {
@@ -130,7 +159,9 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		if(mIsTakingPicture) {
 			return true;
 		}
-		if(keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+		if(keyCode == KeyEvent.KEYCODE_SEARCH) {
+			showSelectModeDialog();
+		} else if(keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
 			showGlitchLevelControl(keyCode);
 		} else if(keyCode == KeyEvent.KEYCODE_BACK) {
 			if(mCameraDevice != null) {
@@ -140,6 +171,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			}
 			SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
 			editor.putInt("Level", mLevel);
+			editor.putString("Breakers", mBreakerSettings.toString());
 			editor.commit();
 			setResult(Activity.RESULT_CANCELED);
 			finish();
@@ -325,15 +357,22 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 
 	PictureCallback mJpegPictureCallback = new PictureCallback() {
 		public void onPictureTaken(byte [] data, final Camera camera) {
-			for(int i = 0; i < data.length; i++) {
-				if(data[i] == 48 && new Random().nextInt((101 - mLevel)*5) == 0) {
-					data[i] = (byte) (new Random().nextInt(10) + 47);
-				}
+			ArrayList<Breaker> breakers = Breaker.getEnabledObjects(BrokenCamera.this, mBreakerSettings);
+			if(breakers.size() == 0) {
+				breakers.add(Breaker.getObject(BrokenCamera.this, "cc.omora.android.brokencamera.breakers.MonkeyGlitch"));
+			}
+
+			for(int i = 0; i < breakers.size(); i++) {
+				breakers.get(i).breakData(data, mLevel);
 			}
 	
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 4;
 			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+			for(int i = 0; i < breakers.size(); i++) {
+				breakers.get(i).breakData(bitmap, mLevel);
+			}
 	
 			String file_name = String.valueOf(System.currentTimeMillis()) + ".jpg";
 			MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, file_name, null);
