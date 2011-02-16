@@ -1,6 +1,10 @@
 package cc.omora.android.brokencamera;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.Runnable;
 import java.util.List;
 import java.util.ArrayList;
@@ -14,6 +18,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -279,7 +285,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			Size optimalSize = null;
 			for (Size size : sizes) {
 				double ratio = (double) size.width / size.height;
-				if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
+				if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE && size.width < 1000 && size.height < 1000) {
 					optimalSize = size;
 					break;
 				}
@@ -367,15 +373,37 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			}
 	
 			BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inSampleSize = 4;
 			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options).copy(Bitmap.Config.RGB_565, true);
 
 			for(int i = 0; i < breakers.size(); i++) {
 				breakers.get(i).breakData(bitmap, mLevel);
 			}
 	
-			String file_name = String.valueOf(System.currentTimeMillis()) + ".jpg";
-			MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, file_name, null);
+			OutputStream outputStream = null;
+			String fileName = String.valueOf(System.currentTimeMillis()) + ".jpg";
+			File file = null;
+			try {
+				File directory = new File("/sdcard/BrokenCamera/");
+				if (!directory.exists()) {  
+					directory.mkdirs();
+				}  
+				file = new File(directory, fileName);
+				if(file.createNewFile()) {
+					outputStream = new FileOutputStream(file);
+					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+				}
+			} catch(FileNotFoundException e) {
+			    	Log.v("hoge", ""+e);
+			} catch(IOException e) {
+			    	Log.v("hoge", ""+e);
+			} finally {
+			}
+			ContentValues values = new ContentValues();
+			values.put(MediaStore.Images.Media.TITLE, fileName);
+			values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+			values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
+			ContentResolver contentResolver = BrokenCamera.this.getContentResolver();
+			contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 	
 			mProcessingDialog.dismiss();
 			mPreview.setVisibility(View.INVISIBLE);
