@@ -393,9 +393,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
 				}
 			} catch(FileNotFoundException e) {
-			    	Log.v("hoge", ""+e);
 			} catch(IOException e) {
-			    	Log.v("hoge", ""+e);
 			} finally {
 			}
 			ContentValues values = new ContentValues();
