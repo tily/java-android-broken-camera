@@ -17,7 +17,7 @@ import org.json.JSONException;
 
 public class Breaker {
 	public void breakData(byte[] data,   int level) {}
-	public void breakData(Bitmap bitmap, int level) {}
+	public Bitmap breakData(Bitmap bitmap, int level) { return bitmap; }
 
 	public static Breaker getObject(Context context, String className) {
 		String packageName = "cc.omora.android.brokencamera";
