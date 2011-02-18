@@ -376,7 +376,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 			Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options).copy(Bitmap.Config.RGB_565, true);
 
 			for(int i = 0; i < breakers.size(); i++) {
-				breakers.get(i).breakData(bitmap, mLevel);
+				bitmap = breakers.get(i).breakData(bitmap, mLevel);
 			}
 	
 			OutputStream outputStream = null;
