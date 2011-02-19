@@ -165,7 +165,7 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		if(mIsTakingPicture) {
 			return true;
 		}
-		if(keyCode == KeyEvent.KEYCODE_SEARCH) {
+		if(keyCode == KeyEvent.KEYCODE_MENU) {
 			showSelectModeDialog();
 		} else if(keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
 			showGlitchLevelControl(keyCode);
