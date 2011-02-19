@@ -145,6 +145,10 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 
 	protected void onStop() {
 		super.onStop();
+		SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+		editor.putInt("Level", mLevel);
+		editor.putString("Breakers", mBreakerSettings.toString());
+		editor.commit();
 		if(mCameraDevice != null) {
 			mCameraDevice.stopPreview();
 			mCameraDevice.release();
@@ -175,10 +179,6 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 				mCameraDevice.release();
 				mCameraDevice = null;
 			}
-			SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-			editor.putInt("Level", mLevel);
-			editor.putString("Breakers", mBreakerSettings.toString());
-			editor.commit();
 			setResult(Activity.RESULT_CANCELED);
 			finish();
 		}
