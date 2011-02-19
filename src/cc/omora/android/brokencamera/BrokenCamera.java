@@ -256,8 +256,8 @@ public class BrokenCamera extends Activity implements KeyEvent.Callback
 		}
 		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 			Camera.Parameters params = mCameraDevice.getParameters();
-			List<Size> previewSizes = Reflect.getSupportedSizes(params, true);
-			List<Size> pictureSizes = Reflect.getSupportedSizes(params, false);
+			List<Size> previewSizes = params.getSupportedPreviewSizes();
+			List<Size> pictureSizes = params.getSupportedPictureSizes();
 			if(null != previewSizes) {
 				Size optimalSize = getOptimalSize(previewSizes, width, height);
 				params.setPreviewSize(optimalSize.width, optimalSize.height);
