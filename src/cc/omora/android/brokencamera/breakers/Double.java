@@ -20,4 +20,3 @@ public class Double extends Breaker {
 		return bitmap;
         }
 }
-

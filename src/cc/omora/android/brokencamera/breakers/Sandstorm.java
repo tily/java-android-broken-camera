@@ -1,4 +1,4 @@
-// based on LoadPixels 1,2 by tvsexlab.com
+// based on LoadPixels 1 by video
 package cc.omora.android.brokencamera.breakers;
 import cc.omora.android.brokencamera.Breaker;
 import java.util.Random;
@@ -19,4 +19,3 @@ public class Sandstorm extends Breaker {
 		return bitmap;
         }
 }
-

@@ -24,4 +24,3 @@ public class PartialFlow extends Breaker {
 		return bitmap;
         }
 }
-

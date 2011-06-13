@@ -23,4 +23,3 @@ public class Fogged extends Breaker {
 		return bitmap;
         }
 }
-
